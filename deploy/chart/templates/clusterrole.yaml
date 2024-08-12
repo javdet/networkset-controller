@@ -1,0 +1,139 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/managed-by: Helm
+    release: "{{ .Release.Name }}"
+  name: {{ include "networkset-controller.fullname" . }}-metrics
+rules:
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/managed-by: Helm
+    release: "{{ .Release.Name }}"
+  name: {{ include "networkset-controller.fullname" . }}-proxy
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/managed-by: Helm
+    release: "{{ .Release.Name }}"
+  name: {{ include "networkset-controller.fullname" . }}-manager
+rules:
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - globalnetworkpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - globalnetworkpolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - globalnetworkpolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networkpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networkpolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networkpolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networksets
+  - globalnetworksets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networksets/finalizers
+  - globalnetworksets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - projectcalico.org
+  resources:
+  - networksets/status
+  - globalnetworksets/status
+  verbs:
+  - get
+  - patch
+  - update

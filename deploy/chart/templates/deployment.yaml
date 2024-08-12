@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "networkset-controller.fullname" . }}
+  namespace: {{ default .Release.Namespace | quote }}
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/managed-by: Helm
+    release: "{{ .Release.Name }}"
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: {{ default 10 .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+      app.kubernetes.io/instance: controller-manager
+      app.kubernetes.io/component: manager
+      app.kubernetes.io/managed-by: Helm
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+        app.kubernetes.io/name: {{ include "networkset-controller.fullname" . }}
+        app.kubernetes.io/instance: controller-manager
+        app.kubernetes.io/component: manager
+        app.kubernetes.io/managed-by: Helm
+        release: "{{ .Release.Name }}"
+      annotations:
+        {{- if .Values.metrics.enabled }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: {{ .Values.metrics.port | quote }}
+        {{- end }}
+        {{- range $key, $value := .Values.podAnnotations }}
+        {{   $key }}: {{ $value | quote }}
+        {{- end }}
+    spec:
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName }}
+      {{- end }}
+      securityContext: {{ toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
+      serviceAccountName: {{ if .Values.rbac.create }}{{ .Release.Name }}{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
+      containers:
+      - name: {{ include "networkset-controller.fullname" . }}
+        image: {{ include "networkset-controller.image" . }}
+        imagePullPolicy: {{ default "" .Values.imagePullPolicy | quote }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        command: ["/manager", "--leader-elect", "--health-probe-bind-address=:8081", "--metrics-bind-address=0.0.0.0:8080"]
+        env:
+        - name: NETWORK_POLICY_SELECTOR
+          value: "DNS_RESOLVER"
+        - name: NETWORK_SET_RESOLVE_PERIOD
+          value: "5"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.health.port }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ .Values.health.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        ports:
+        - name: {{ .Values.metrics.portName | quote }}
+          containerPort: {{ .Values.metrics.port }}
+        {{- if .Values.volumeMounts }}
+{{ toYaml .Values.volumeMounts | indent 8 }}
+        {{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+      - name: kube-rbac-proxy
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: {{ .Values.image.kubeproxy.registry }}/{{ .Values.image.kubeproxy.image }}:{{ .Values.image.kubeproxy.tag }}
+        args:
+        - "--secure-listen-address=0.0.0.0:8443"
+        - "--upstream=http://127.0.0.1:8080/"
+        - "--logtostderr=true"
+        - "--v=0"
+        ports:
+        - containerPort: 8443
+          protocol: TCP
+          name: https
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+    {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+    {{- end }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+    {{- end }}
+    {{- if .Values.hostAliases }}
+      hostAliases:
+{{ toYaml .Values.hostAliases | indent 8 }}
+    {{- end }}

@@ -1,0 +1,50 @@
+replicas: 1
+revisionHistoryLimit: 10
+schedulerName:
+terminationGracePeriodSeconds: 3600
+priorityClassName:
+imagePullPolicy: Always
+
+image:
+  kubeproxy:
+    registry: gcr.io
+    image: kubebuilder/kube-rbac-proxy
+    tag: v0.15.0
+  registry: <registry>
+  image: networksets-controller
+  tag: 1.0.2
+
+metrics:
+  enabled: true
+  port: 8080
+  portName: metrics
+  serviceMonitor:
+    enabled: true
+
+health:
+  port: 8081
+podSecurityContext: {}
+
+volumeMounts: []
+volumes: []
+
+rbac:
+  create: true
+  serviceAccountAnnotations: {}
+
+resources: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - "ALL"
+  privileged: false
+  runAsUser: 3000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+affinity: {}
+nodeSelector: {}
+tolerations: []
+hostAliases: []
+imagePullSecrets:
+  - name: "image-pull-secret"

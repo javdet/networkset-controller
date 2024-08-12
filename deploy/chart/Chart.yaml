@@ -1,0 +1,13 @@
+---
+apiVersion: v2
+annotations:
+  category: controller
+  licenses: Apache-2.0
+name: networksets-controller
+version: 0.1.1
+appVersion: 1.0.2
+description: networksets-controller
+maintainers:
+- name: Sergey Byvshev
+  email: sergey.byvshev@exness.com
+

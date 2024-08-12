@@ -1,0 +1,15 @@
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: test-allow-https
+spec:
+  selector: app == 'k8s-example'
+  types:
+  - Egress
+  egress:
+  - action: Allow
+    protocol: TCP
+    destination:
+      selector: DNS_RESOLVER == 'github.com'
+      ports:
+      - 443

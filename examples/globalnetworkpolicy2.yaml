@@ -1,0 +1,21 @@
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: test-allow-docker
+spec:
+  selector: app == 'k8s-example'
+  types:
+  - Egress
+  egress:
+  - action: Allow
+    protocol: TCP
+    destination:
+      selector: DNS_RESOLVER == 'github.com'
+      ports:
+      - 443
+  - action: Allow
+    protocol: TCP
+    destination:
+      selector: DNS_RESOLVER == 'hub.docker.com'
+      ports:
+      - 443
